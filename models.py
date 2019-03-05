@@ -9,7 +9,7 @@ class TSN(nn.Module):
     def __init__(self, num_class, num_segments, modality,
                  base_model='resnet101', new_length=None,
                  consensus_type='avg', before_softmax=True,
-                 dropout=0.8,
+                 dropout=0.8, use_TSM=True,
                  crop_num=1, partial_bn=True):
         super(TSN, self).__init__()
         self.modality = modality
@@ -19,6 +19,7 @@ class TSN(nn.Module):
         self.dropout = dropout
         self.crop_num = crop_num
         self.consensus_type = consensus_type
+        self.use_TSM = use_TSM
         if not before_softmax and consensus_type != 'avg':
             raise ValueError("Only avg consensus can be used after Softmax")
 
@@ -79,7 +80,7 @@ TSN Configurations:
 
     def _prepare_base_model(self, base_model):
         
-        if 'resnet' in base_model:
+        if 'resnet' in base_model and self.use_TSM:
             self.base_model = getattr(TSM, base_model)(True)
             self.base_model.last_layer_name = 'fc'
             self.input_size = 224
@@ -93,7 +94,7 @@ TSN Configurations:
                 self.input_mean = [0.485, 0.456, 0.406] + [0] * 3 * self.new_length
                 self.input_std = self.input_std + [np.mean(self.input_std) * 2] * 3 * self.new_length
 
-        elif 'vgg' in base_model:
+        elif 'resnet' in base_model or 'vgg' in base_model:
             self.base_model = getattr(torchvision.models, base_model)(True)
             self.base_model.last_layer_name = 'fc'
             self.input_size = 224
@@ -137,7 +138,7 @@ TSN Configurations:
         super(TSN, self).train(mode)
         count = 0
         if self._enable_pbn:
-            print("Freezing BatchNorm2D except the first one.")
+            # print("Freezing BatchNorm2D except the first one.")
             for m in self.base_model.modules():
                 if isinstance(m, nn.BatchNorm2d):
                     count += 1

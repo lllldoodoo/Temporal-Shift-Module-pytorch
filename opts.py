@@ -7,13 +7,14 @@ parser.add_argument('val_list', type=str)
 
 # ========================= Model Configs ==========================
 parser.add_argument('--arch', type=str, default="resnet50")
+parser.add_argument('--use_TSM', type=bool, default=True)
 parser.add_argument('--num_segments', type=int, default=8)
 parser.add_argument('--consensus_type', type=str, default='avg',
                     choices=['avg', 'max', 'topk', 'identity', 'rnn', 'cnn'])
 parser.add_argument('--k', type=int, default=3)
 
-parser.add_argument('--dropout', '--do', default=0.5, type=float,
-                    metavar='DO', help='dropout ratio (default: 0.5)')
+parser.add_argument('--dropout', '--do', default=0.8, type=float,
+                    metavar='DO', help='dropout ratio (default: 0.8)')
 parser.add_argument('--loss_type', type=str, default="nll",
                     choices=['nll'])
 
@@ -37,6 +38,8 @@ parser.add_argument('--no_partialbn', '--npb', default=False, action="store_true
 # ========================= Monitor Configs ==========================
 parser.add_argument('--print-freq', '-p', default=1000, type=int,
                     metavar='N', help='print frequency (default: 1000)')
+parser.add_argument('--valid-freq', default=300, type=int,
+                    metavar='N', help='validation print frequency (default: 300)')
 parser.add_argument('--eval-freq', '-ef', default=5, type=int,
                     metavar='N', help='evaluation frequency (default: 5)')
 

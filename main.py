@@ -33,7 +33,7 @@ def main():
         raise ValueError('Unknown dataset '+args.dataset)
 
     model = TSN(num_class, args.num_segments, args.modality,
-                base_model=args.arch,
+                base_model=args.arch, use_TSM=args.use_TSM,
                 consensus_type=args.consensus_type, dropout=args.dropout, partial_bn=not args.no_partialbn)
 
     crop_size = model.crop_size
@@ -105,11 +105,13 @@ def main():
         criterion = torch.nn.CrossEntropyLoss().cuda()
     else:
         raise ValueError("Unknown loss type")
-
+    
+    """
     for group in policies:
         print(('group: {} has {} params, lr_mult: {}, decay_mult: {}'.format(
             group['name'], len(group['params']), group['lr_mult'], group['decay_mult'])))
-
+    """
+    
     optimizer = torch.optim.SGD(policies,
                                 args.lr,
                                 momentum=args.momentum,
@@ -161,12 +163,10 @@ def train(train_loader, model, criterion, optimizer, epoch):
         data_time.update(time.time() - end)
 
         target = target.cuda(non_blocking=True)
-        input_var = torch.autograd.Variable(input)
-        target_var = torch.autograd.Variable(target)
 
         # compute output
-        output = model(input_var)
-        loss = criterion(output, target_var)
+        output = model(input)
+        loss = criterion(output, target)
 
         # measure accuracy and record loss
         prec1, prec5 = accuracy(output.data, target, topk=(1,5))
@@ -212,34 +212,33 @@ def validate(val_loader, model, criterion, iter, logger=None):
     model.eval()
 
     end = time.time()
-    for i, (input, target) in enumerate(val_loader):
-        target = target.cuda(non_blocking=True)
-        input_var = torch.autograd.Variable(input, volatile=True)
-        target_var = torch.autograd.Variable(target, volatile=True)
+    with torch.no_grad():
+        for i, (input, target) in enumerate(val_loader):
+            target = target.cuda(non_blocking=True)
 
-        # compute output
-        output = model(input_var)
-        loss = criterion(output, target_var)
+            # compute output
+            output = model(input)
+            loss = criterion(output, target)
 
-        # measure accuracy and record loss
-        prec1, prec5 = accuracy(output.data, target, topk=(1,5))
+            # measure accuracy and record loss
+            prec1, prec5 = accuracy(output.data, target, topk=(1,5))
 
-        losses.update(loss.item(), input.size(0))
-        top1.update(prec1.item(), input.size(0))
-        top5.update(prec5.item(), input.size(0))
+            losses.update(loss.item(), input.size(0))
+            top1.update(prec1.item(), input.size(0))
+            top5.update(prec5.item(), input.size(0))
 
-        # measure elapsed time
-        batch_time.update(time.time() - end)
-        end = time.time()
+            # measure elapsed time
+            batch_time.update(time.time() - end)
+            end = time.time()
 
-        if i % args.print_freq == 0:
-            print(('Test: [{0}/{1}]\t'
-                  'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
-                  'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
-                  'Prec@1 {top1.val:.3f} ({top1.avg:.3f})\t'
-                  'Prec@5 {top5.val:.3f} ({top5.avg:.3f})'.format(
-                   i, len(val_loader), batch_time=batch_time, loss=losses,
-                   top1=top1, top5=top5)))
+            if i % args.valid_freq == 0:
+                print(('Test: [{0}/{1}]\t'
+                      'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
+                      'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
+                      'Prec@1 {top1.val:.3f} ({top1.avg:.3f})\t'
+                      'Prec@5 {top5.val:.3f} ({top5.avg:.3f})'.format(
+                       i, len(val_loader), batch_time=batch_time, loss=losses,
+                       top1=top1, top5=top5)))
 
     print(('Testing Results: Prec@1 {top1.avg:.3f} Prec@5 {top5.avg:.3f} Loss {loss.avg:.5f}'
           .format(top1=top1, top5=top5, loss=losses)))

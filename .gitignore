@@ -1,6 +1,7 @@
 # My gitignore
 *.ipynb
 *.txt
+checkpoints/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
