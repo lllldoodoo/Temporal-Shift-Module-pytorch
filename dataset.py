@@ -70,7 +70,7 @@ class TSNDataSet(data.Dataset):
             offsets = np.sort(randint(record.num_frames - self.new_length + 1, size=self.num_segments))
         else:
             offsets = np.zeros((self.num_segments,))
-        return offsets + 1
+        return offsets 
 
     def _get_val_indices(self, record):
         if record.num_frames > self.num_segments + self.new_length - 1:
@@ -78,7 +78,7 @@ class TSNDataSet(data.Dataset):
             offsets = np.array([int(tick / 2.0 + tick * x) for x in range(self.num_segments)])
         else:
             offsets = np.zeros((self.num_segments,))
-        return offsets + 1
+        return offsets 
 
     def _get_test_indices(self, record):
 
@@ -86,7 +86,7 @@ class TSNDataSet(data.Dataset):
 
         offsets = np.array([int(tick / 2.0 + tick * x) for x in range(self.num_segments)])
 
-        return offsets + 1
+        return offsets 
 
     def __getitem__(self, index):
         record = self.video_list[index]
