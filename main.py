@@ -20,6 +20,7 @@ best_prec1 = 0
 def main():
     global args, best_prec1
     args = parser.parse_args()
+    print(args)
 
     if args.dataset == 'ucf101':
         num_class = 101

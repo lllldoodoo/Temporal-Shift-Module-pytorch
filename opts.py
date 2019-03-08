@@ -13,19 +13,19 @@ parser.add_argument('--consensus_type', type=str, default='avg',
                     choices=['avg', 'max', 'topk', 'identity', 'rnn', 'cnn'])
 parser.add_argument('--k', type=int, default=3)
 
-parser.add_argument('--dropout', '--do', default=0.8, type=float,
-                    metavar='DO', help='dropout ratio (default: 0.8)')
+parser.add_argument('--dropout', '--do', default=0, type=float,
+                    metavar='DO', help='dropout ratio (default: 0)')
 parser.add_argument('--loss_type', type=str, default="nll",
                     choices=['nll'])
 
 # ========================= Learning Configs ==========================
 parser.add_argument('--epochs', default=45, type=int, metavar='N',
                     help='number of total epochs to run')
-parser.add_argument('-b', '--batch-size', default=32, type=int,
-                    metavar='N', help='mini-batch size (default: 256)')
-parser.add_argument('--lr', '--learning-rate', default=0.001, type=float,
+parser.add_argument('-b', '--batch-size', default=100, type=int,
+                    metavar='N', help='mini-batch size (default: 100)')
+parser.add_argument('--lr', '--learning-rate', default=0.01, type=float,
                     metavar='LR', help='initial learning rate')
-parser.add_argument('--lr_steps', default=[20, 40], type=float, nargs="+",
+parser.add_argument('--lr_steps', default=[15, 30], type=float, nargs="+",
                     metavar='LRSteps', help='epochs to decay learning rate by 10')
 parser.add_argument('--momentum', default=0.9, type=float, metavar='M',
                     help='momentum')
@@ -36,17 +36,17 @@ parser.add_argument('--clip-gradient', '--gd', default=None, type=float,
 parser.add_argument('--no_partialbn', '--npb', default=False, action="store_true")
 
 # ========================= Monitor Configs ==========================
-parser.add_argument('--print-freq', '-p', default=1000, type=int,
-                    metavar='N', help='print frequency (default: 1000)')
-parser.add_argument('--valid-freq', default=300, type=int,
-                    metavar='N', help='validation print frequency (default: 300)')
+parser.add_argument('--print-freq', '-p', default=300, type=int,
+                    metavar='N', help='print frequency (default: 300)')
+parser.add_argument('--valid-freq', default=100, type=int,
+                    metavar='N', help='validation print frequency (default: 100)')
 parser.add_argument('--eval-freq', '-ef', default=5, type=int,
                     metavar='N', help='evaluation frequency (default: 5)')
 
 
 # ========================= Runtime Configs ==========================
-parser.add_argument('-j', '--workers', default=64, type=int, metavar='N',
-                    help='number of data loading workers (default: 64)')
+parser.add_argument('-j', '--workers', default=100, type=int, metavar='N',
+                    help='number of data loading workers (default: 100)')
 parser.add_argument('--resume', default='', type=str, metavar='PATH',
                     help='path to latest checkpoint (default: none)')
 parser.add_argument('-e', '--evaluate', dest='evaluate', action='store_true',
