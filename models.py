@@ -3,11 +3,11 @@ from torch import nn
 from ops.basic_ops import ConsensusModule, Identity
 from transforms import *
 from torch.nn.init import normal_, constant_
-import TSM
+import resnet
 
 class TSN(nn.Module):
     def __init__(self, num_class, num_segments, modality,
-                 base_model='resnet101', new_length=None,
+                 base_model='resnet101', mixer='TSM', new_length=None,
                  consensus_type='avg', before_softmax=True,
                  dropout=0.8, use_TSM=True,
                  crop_num=1, partial_bn=True):
@@ -19,7 +19,7 @@ class TSN(nn.Module):
         self.dropout = dropout
         self.crop_num = crop_num
         self.consensus_type = consensus_type
-        self.use_TSM = use_TSM
+        self.mixer = mixer
         if not before_softmax and consensus_type != 'avg':
             raise ValueError("Only avg consensus can be used after Softmax")
 
@@ -79,9 +79,18 @@ TSN Configurations:
         return feature_dim
 
     def _prepare_base_model(self, base_model):
-        
-        if 'resnet' in base_model and self.use_TSM:
-            self.base_model = getattr(TSM, base_model)(True)
+
+        if 'resnet' in base_model:
+            self.base_model = getattr(resnet, base_model)(True)
+            for name, modules in self.base_model.named_modules():
+                for i in range(1,5):
+                    if name == "layer" + str(i):
+                        for module in modules:
+                            if self.mixer == "TSM":
+                                module.mixer_module = resnet.TSM(self.num_segments)
+                            elif self.mixer == "SA":
+                                module.mixer_module = resnet.Self_Attention(self.num_segments, module.inplanes)
+
             self.base_model.last_layer_name = 'fc'
             self.input_size = 224
             self.input_mean = [0.485, 0.456, 0.406]
@@ -94,7 +103,7 @@ TSN Configurations:
                 self.input_mean = [0.485, 0.456, 0.406] + [0] * 3 * self.new_length
                 self.input_std = self.input_std + [np.mean(self.input_std) * 2] * 3 * self.new_length
 
-        elif 'resnet' in base_model or 'vgg' in base_model:
+        elif 'vgg' in base_model:
             self.base_model = getattr(torchvision.models, base_model)(True)
             self.base_model.last_layer_name = 'fc'
             self.input_size = 224
@@ -107,6 +116,7 @@ TSN Configurations:
             elif self.modality == 'RGBDiff':
                 self.input_mean = [0.485, 0.456, 0.406] + [0] * 3 * self.new_length
                 self.input_std = self.input_std + [np.mean(self.input_std) * 2] * 3 * self.new_length
+
         elif base_model == 'BNInception':
             import tf_model_zoo
             self.base_model = getattr(tf_model_zoo, base_model)()
@@ -127,6 +137,7 @@ TSN Configurations:
             self.input_size = 299
             self.input_mean = [0.5]
             self.input_std = [0.5]
+
         else:
             raise ValueError('Unknown base model: {}'.format(base_model))
 
@@ -178,7 +189,7 @@ TSN Configurations:
                 normal_weight.append(ps[0])
                 if len(ps) == 2:
                     normal_bias.append(ps[1])
-                  
+
             elif isinstance(m, torch.nn.BatchNorm1d):
                 bn.extend(list(m.parameters()))
             elif isinstance(m, torch.nn.BatchNorm2d):

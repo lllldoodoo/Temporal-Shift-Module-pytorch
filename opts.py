@@ -4,10 +4,12 @@ parser.add_argument('dataset', type=str, choices=['ucf101', 'hmdb51', 'kinetics'
 parser.add_argument('modality', type=str, choices=['RGB', 'Flow', 'RGBDiff'])
 parser.add_argument('train_list', type=str)
 parser.add_argument('val_list', type=str)
+parser.add_argument('--model', type=str, default='TSN', choices=['TSN', 'TSM', 'GSM', 'etc'])
+
 
 # ========================= Model Configs ==========================
 parser.add_argument('--arch', type=str, default="resnet50")
-parser.add_argument('--use_TSM', type=bool, default=True)
+parser.add_argument('--mixer', type=str, default="TSM")
 parser.add_argument('--num_segments', type=int, default=8)
 parser.add_argument('--consensus_type', type=str, default='avg',
                     choices=['avg', 'max', 'topk', 'identity', 'rnn', 'cnn'])
@@ -21,7 +23,7 @@ parser.add_argument('--loss_type', type=str, default="nll",
 # ========================= Learning Configs ==========================
 parser.add_argument('--epochs', default=45, type=int, metavar='N',
                     help='number of total epochs to run')
-parser.add_argument('-b', '--batch-size', default=100, type=int,
+parser.add_argument('-b', '--batch-size', default=10, type=int,
                     metavar='N', help='mini-batch size (default: 100)')
 parser.add_argument('--lr', '--learning-rate', default=0.01, type=float,
                     metavar='LR', help='initial learning rate')

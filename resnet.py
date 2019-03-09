@@ -8,6 +8,7 @@ import torch.nn as nn
 import torch.utils.model_zoo as model_zoo
 import torch
 import torch.nn.functional as F
+import math
 
 
 __all__ = ['ResNet', 'resnet18', 'resnet34', 'resnet50', 'resnet101',
@@ -43,6 +44,68 @@ def tsm(tensor, duration, version='zero'):
         raise ValueError('Unknown TSM version: {}'.format(version))
     return torch.cat((pre_tensor, post_tensor, peri_tensor), dim=2).view(size)
 
+class Identity(nn.Module):
+
+    def __init__(self):
+        super(Identity, self).__init__()
+
+    def forward(self, x):
+
+        return x
+
+class TSM(nn.Module):
+
+    def __init__(self, num_segments, version='zero'):
+        super(TSM, self).__init__()
+        self.num_segments = num_segments
+        self.version = version
+
+    def forward(self, x):
+
+        return tsm(x, self.num_segments, self.version)
+
+import pudb
+
+class Self_Attention(nn.Module):
+
+    def __init__(self, num_segments, dim_in, dim_k=64):
+        super(Self_Attention, self).__init__()
+        self.num_segments = num_segments
+        self.dim_in = dim_in
+        self.dim_k = dim_k
+        self.softmax = nn.Softmax(dim=-1)
+        self.dropout = nn.Dropout(0.2)
+        self.linear = nn.Linear(dim_in, dim_k)
+
+    def forward(self, x):
+        # x: [N * T, C, H, W]
+        pudb.set_trace()
+        size = x.size()
+        x = x.reshape((-1, size[1], size[2]*size[3]))
+        # x: [N * T, C, H * W]
+        Q = x.max(dim=-1)[0]
+        # Q: [N * T, C]
+        Q = self.linear(Q)
+        # Q: [N * T, k]
+        Q = Q.reshape((-1, self.num_segments, self.dim_k))
+        # Q: [N, T, k]
+        A = torch.matmul(Q, Q.transpose(1, 2))
+        # A: [N, T, T]
+        A = A/ math.sqrt(self.dim_k)
+        A = self.softmax(A)
+        A = self.dropout(A)
+
+        x = x.view((-1, self.num_segments, size[1]*size[2]*size[3]))
+        # x: [N, T, C * H * W]
+        output = torch.matmul(A, x)
+        # out: [N, T, C * H * W]
+        output = output.view(size)
+
+        return output
+
+
+
+
 
 def conv3x3(in_planes, out_planes, stride=1):
     """3x3 convolution with padding"""
@@ -60,6 +123,7 @@ class BasicBlock(nn.Module):
 
     def __init__(self, inplanes, planes, stride=1, downsample=None):
         super(BasicBlock, self).__init__()
+        self.inplanes = inplanes
         self.conv1 = conv3x3(inplanes, planes, stride)
         self.bn1 = nn.BatchNorm2d(planes)
         self.relu = nn.ReLU(inplace=True)
@@ -67,11 +131,12 @@ class BasicBlock(nn.Module):
         self.bn2 = nn.BatchNorm2d(planes)
         self.downsample = downsample
         self.stride = stride
+        self.mixer_module = Identity
 
     def forward(self, x):
         identity = x
 
-        out = tsm(x, 8, 'zero')
+        out = self.mixer_module(x)
         out = self.conv1(out)
         out = self.bn1(out)
         out = self.relu(out)
@@ -93,6 +158,7 @@ class Bottleneck(nn.Module):
 
     def __init__(self, inplanes, planes, stride=1, downsample=None):
         super(Bottleneck, self).__init__()
+        self.inplanes = inplanes
         self.conv1 = conv1x1(inplanes, planes)
         self.bn1 = nn.BatchNorm2d(planes)
         self.conv2 = conv3x3(planes, planes, stride)
@@ -102,11 +168,12 @@ class Bottleneck(nn.Module):
         self.relu = nn.ReLU(inplace=True)
         self.downsample = downsample
         self.stride = stride
+        self.mixer_module = Identity
 
     def forward(self, x):
         identity = x
 
-        out = tsm(x, 8, 'zero')
+        out = self.mixer_module(x)
         out = self.conv1(out)
         out = self.bn1(out)
         out = self.relu(out)
@@ -178,7 +245,7 @@ class ResNet(nn.Module):
         return nn.Sequential(*layers)
 
     def forward(self, x):
-        
+
         x = self.conv1(x)
         x = self.bn1(x)
         x = self.relu(x)
