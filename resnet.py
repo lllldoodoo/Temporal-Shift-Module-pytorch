@@ -63,9 +63,7 @@ class TSM(nn.Module):
     def forward(self, x):
 
         return tsm(x, self.num_segments, self.version)
-
-import pudb
-
+    
 class Self_Attention(nn.Module):
 
     def __init__(self, num_segments, dim_in, dim_k=64):
@@ -79,7 +77,6 @@ class Self_Attention(nn.Module):
 
     def forward(self, x):
         # x: [N * T, C, H, W]
-        pudb.set_trace()
         size = x.size()
         x = x.reshape((-1, size[1], size[2]*size[3]))
         # x: [N * T, C, H * W]
