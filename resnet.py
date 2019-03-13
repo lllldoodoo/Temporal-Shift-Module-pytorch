@@ -55,9 +55,10 @@ class BasicBlock(nn.Module):
 
     def forward(self, x):
         identity = x
+        out = x
         
         if self.mixer_module1 is not None:
-            out = self.mixer_module1(x)
+            out = self.mixer_module1(out)
             
         out = self.conv1(out)
         out = self.bn1(out)
@@ -99,9 +100,10 @@ class Bottleneck(nn.Module):
 
     def forward(self, x):
         identity = x
+        out = x
 
         if self.mixer_module1 is not None:
-            out = self.mixer_module1(x)
+            out = self.mixer_module1(out)
             
         out = self.conv1(out)
         out = self.bn1(out)

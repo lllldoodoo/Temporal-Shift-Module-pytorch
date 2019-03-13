@@ -131,7 +131,7 @@ class ChannelGate(nn.Module):
             else:
                 channel_att_sum = channel_att_sum + channel_att_raw
 
-        scale = F.sigmoid( channel_att_sum ).unsqueeze(2).unsqueeze(3).expand_as(x)
+        scale = torch.sigmoid( channel_att_sum ).unsqueeze(2).unsqueeze(3).expand_as(x)
         return x * scale
 
 def logsumexp_2d(tensor):
@@ -153,9 +153,21 @@ class SpatialGate(nn.Module):
     def forward(self, x):
         x_compress = self.compress(x)
         x_out = self.spatial(x_compress)
-        scale = F.sigmoid(x_out) # broadcasting
+        scale = torch.sigmoid(x_out) # broadcasting
         return x * scale
-
+import pdb
+class TemporalGate(nn.Module):
+    def __init__(self, num_segments):
+        super(TemporalGate, self).__init__()
+        self.num_segments = num_segments
+        self.gate = ChannelGate(num_segments, 2, ['avg', 'max'])
+    def forward(self, x):
+        x_out = x.reshape((-1, self.num_segments, x.size(1), x.size(2) * x.size(3)))
+        pdb.set_trace()
+        x_out = self.gate(x_out)
+        x_out = x.reshape(x.size())
+        return x 
+    
 class CBAM(nn.Module):
     def __init__(self, gate_channels, reduction_ratio=16, pool_types=['avg', 'max'], no_spatial=False):
         super(CBAM, self).__init__()
@@ -167,4 +179,20 @@ class CBAM(nn.Module):
         x_out = self.ChannelGate(x)
         if not self.no_spatial:
             x_out = self.SpatialGate(x_out)
+        return x_out
+    
+class TCBAM(nn.Module):
+    def __init__(self, num_segments, gate_channels, reduction_ratio=16, pool_types=['avg', 'max'], no_spatial=False):
+        super(TCBAM, self).__init__()
+        self.num_segments = num_segments
+        self.ChannelGate = ChannelGate(gate_channels, reduction_ratio, pool_types)
+        self.no_spatial=no_spatial
+        if not no_spatial:
+            self.SpatialGate = SpatialGate()
+        self.TemporalGate = TemporalGate(num_segments)
+    def forward(self, x):
+        x_out = self.ChannelGate(x)
+        if not self.no_spatial:
+            x_out = self.SpatialGate(x_out)
+        x_out = self.TemporalGate(x_out)
         return x_out

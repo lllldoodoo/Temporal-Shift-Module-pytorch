@@ -91,9 +91,13 @@ TSN Configurations:
                                 module.mixer_module1 = TSM(self.num_segments)
                             elif self.mixer == "SA":
                                 module.mixer_module1 = Self_Attention(self.num_segments, module.inplanes)
+                            elif self.mixer == "CBAM":
+                                module.mixer_module2 = CBAM(module.outplanes, 16 ) 
                             elif self.mixer == "TSM_CBAM":
                                 module.mixer_module1 = TSM(self.num_segments)
                                 module.mixer_module2 = CBAM(module.outplanes, 16 )
+                            elif self.mixer == "TCBAM":
+                                module.mixer_module2 = TCBAM(self.num_segments, module.outplanes, 16 )
 
             self.base_model.last_layer_name = 'fc'
             self.input_size = 224
