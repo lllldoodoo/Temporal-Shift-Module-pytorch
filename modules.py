@@ -49,13 +49,13 @@ class Self_Attention(nn.Module):
     def forward(self, x):
         # x: [N * T, C, H, W]
         size = x.size()
-        x = x.reshape((-1, size[1], size[2]*size[3]))
+        x = x.view((-1, size[1], size[2]*size[3]))
         # x: [N * T, C, H * W]
         Q = x.max(dim=-1)[0]
         # Q: [N * T, C]
         Q = self.linear(Q)
         # Q: [N * T, k]
-        Q = Q.reshape((-1, self.num_segments, self.dim_k))
+        Q = Q.view((-1, self.num_segments, self.dim_k))
         # Q: [N, T, k]
         A = torch.matmul(Q, Q.transpose(1, 2))
         # A: [N, T, T]
@@ -133,6 +133,45 @@ class ChannelGate(nn.Module):
 
         scale = torch.sigmoid( channel_att_sum ).unsqueeze(2).unsqueeze(3).expand_as(x)
         return x * scale
+    
+        
+class TemporalChannelGate(nn.Module):
+    def __init__(self, num_segments, gate_channels, reduction_ratio=16, pool_types=['avg', 'max'], dim_k=64):
+        super(TemporalChannelGate, self).__init__()
+        self.num_segments = num_segments
+        self.gate_channels = gate_channels
+        self.mlp = nn.Sequential(
+            Flatten(),
+            nn.Linear(gate_channels, gate_channels // reduction_ratio),
+            nn.ReLU(),
+            nn.Linear(gate_channels // reduction_ratio, gate_channels)
+            )
+        self.pool_types = pool_types
+        self.dim_k = dim_k
+        self.linear = nn.Linear(gate_channels*2, dim_k)
+    def forward(self, x):
+        channel_att_sum = None
+        pool_concat = None
+        for pool_type in self.pool_types:
+            if pool_type=='avg':
+                avg_pool = F.avg_pool2d( x, (x.size(2), x.size(3)), stride=(x.size(2), x.size(3)))
+                channel_att_raw = self.mlp( avg_pool )
+            elif pool_type=='max':
+                max_pool = F.max_pool2d( x, (x.size(2), x.size(3)), stride=(x.size(2), x.size(3)))
+                channel_att_raw = self.mlp( max_pool )
+
+            if channel_att_sum is None:
+                channel_att_sum = channel_att_raw
+            else:
+                channel_att_sum = channel_att_sum + channel_att_raw
+                
+        pool = torch.cat((avg_pool, max_pool), dim=1).squeeze()
+        pool = self.linear(pool)
+        pool = pool.view((pool.size(0), self.num_segments, -1))
+        
+
+        scale = torch.sigmoid( channel_att_sum ).unsqueeze(2).unsqueeze(3).expand_as(x)
+        return x * scale
 
 def logsumexp_2d(tensor):
     tensor_flatten = tensor.view(tensor.size(0), tensor.size(1), -1)
@@ -155,17 +194,16 @@ class SpatialGate(nn.Module):
         x_out = self.spatial(x_compress)
         scale = torch.sigmoid(x_out) # broadcasting
         return x * scale
-import pdb
+
 class TemporalGate(nn.Module):
     def __init__(self, num_segments):
         super(TemporalGate, self).__init__()
         self.num_segments = num_segments
         self.gate = ChannelGate(num_segments, 2, ['avg', 'max'])
     def forward(self, x):
-        x_out = x.reshape((-1, self.num_segments, x.size(1), x.size(2) * x.size(3)))
-        pdb.set_trace()
+        x_out = x.view((-1, self.num_segments, x.size(1), x.size(2) * x.size(3)))
         x_out = self.gate(x_out)
-        x_out = x.reshape(x.size())
+        x_out = x.view(x.size())
         return x 
     
 class CBAM(nn.Module):
