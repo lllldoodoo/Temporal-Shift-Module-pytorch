@@ -4,6 +4,7 @@ from ops.basic_ops import ConsensusModule, Identity
 from transforms import *
 from torch.nn.init import normal_, constant_
 import resnet
+from modules import *
 
 class TSN(nn.Module):
     def __init__(self, num_class, num_segments, modality,
@@ -87,9 +88,12 @@ TSN Configurations:
                     if name == "layer" + str(i):
                         for module in modules:
                             if self.mixer == "TSM":
-                                module.mixer_module = resnet.TSM(self.num_segments)
+                                module.mixer_module1 = TSM(self.num_segments)
                             elif self.mixer == "SA":
-                                module.mixer_module = resnet.Self_Attention(self.num_segments, module.inplanes)
+                                module.mixer_module1 = Self_Attention(self.num_segments, module.inplanes)
+                            elif self.mixer == "TSM_CBAM":
+                                module.mixer_module1 = TSM(self.num_segments)
+                                module.mixer_module2 = CBAM(module.outplanes, 16 )
 
             self.base_model.last_layer_name = 'fc'
             self.input_size = 224

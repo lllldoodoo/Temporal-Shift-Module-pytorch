@@ -140,21 +140,12 @@ def main():
             # remember best prec@1 and save checkpoint
             is_best = prec1 > best_prec1
             best_prec1 = max(prec1, best_prec1)
-            if len(args.gpus) > 1:
-                save_checkpoint({
-                    'epoch': epoch + 1,
-                    'arch': args.arch,
-                    'state_dict': model.module.state_dict(),
-                    'best_prec1': best_prec1,
-                }, is_best)
-            else:
-                save_checkpoint({
-                    'epoch': epoch + 1,
-                    'arch': args.arch,
-                    'state_dict': model.state_dict(),
-                    'best_prec1': best_prec1,
-                }, is_best)
-
+            save_checkpoint({
+                'epoch': epoch + 1,
+                'arch': args.arch,
+                'state_dict': model.module.state_dict(),
+                'best_prec1': best_prec1,
+            }, is_best)
 
 def train(train_loader, model, criterion, optimizer, epoch):
     batch_time = AverageMeter()
