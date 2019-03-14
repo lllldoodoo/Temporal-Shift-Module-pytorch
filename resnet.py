@@ -42,6 +42,7 @@ class BasicBlock(nn.Module):
     def __init__(self, inplanes, planes, stride=1, downsample=None):
         super(BasicBlock, self).__init__()
         self.inplanes = inplanes
+        self.planes = planes
         self.outplanes = planes
         self.conv1 = conv3x3(inplanes, planes, stride)
         self.bn1 = nn.BatchNorm2d(planes)
@@ -52,6 +53,8 @@ class BasicBlock(nn.Module):
         self.stride = stride
         self.mixer_module1 = None
         self.mixer_module2 = None
+        self.concat_module = None
+        
 
     def forward(self, x):
         identity = x
@@ -59,6 +62,8 @@ class BasicBlock(nn.Module):
         
         if self.mixer_module1 is not None:
             out = self.mixer_module1(out)
+        if self.concat_module is not None:
+            out = self.concat_module(out)
             
         out = self.conv1(out)
         out = self.bn1(out)
@@ -85,6 +90,7 @@ class Bottleneck(nn.Module):
     def __init__(self, inplanes, planes, stride=1, downsample=None):
         super(Bottleneck, self).__init__()
         self.inplanes = inplanes
+        self.planes = planes
         self.outplanes = planes * 4
         self.conv1 = conv1x1(inplanes, planes)
         self.bn1 = nn.BatchNorm2d(planes)
@@ -97,6 +103,7 @@ class Bottleneck(nn.Module):
         self.stride = stride
         self.mixer_module1 = None
         self.mixer_module2 = None
+        self.concat_module = None
 
     def forward(self, x):
         identity = x
@@ -104,6 +111,8 @@ class Bottleneck(nn.Module):
 
         if self.mixer_module1 is not None:
             out = self.mixer_module1(out)
+        if self.concat_module is not None:
+            out = self.concat_module(out)
             
         out = self.conv1(out)
         out = self.bn1(out)

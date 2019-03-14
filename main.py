@@ -33,15 +33,9 @@ def main():
     else:
         raise ValueError('Unknown dataset '+args.dataset)
 
-    if args.model == 'TSN':
-        model = TSN(num_class, args.num_segments, args.modality,
-                base_model=args.arch, mixer=args.mixer,
+    model = TSN(num_class, args.num_segments, args.modality,
+                base_model=args.arch, mixer1=args.mixer1, mixer2=args.mixer2, concat_shift=args.concat_shift,
                 consensus_type=args.consensus_type, dropout=args.dropout, partial_bn=not args.no_partialbn)
-    else:
-        model = TSN(num_class, args.num_segments, args.modality,
-                base_model=args.arch, mixer=args.mixer,
-                consensus_type=args.consensus_type, dropout=args.dropout, partial_bn=not args.no_partialbn)
-
 
     crop_size = model.crop_size
     scale_size = model.scale_size

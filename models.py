@@ -8,8 +8,8 @@ from modules import *
 
 class TSN(nn.Module):
     def __init__(self, num_class, num_segments, modality,
-                 base_model='resnet101', mixer='TSM', new_length=None,
-                 consensus_type='avg', before_softmax=True,
+                 base_model='resnet101', mixer1=None, mixer2=None, new_length=None,
+                 consensus_type='avg', before_softmax=True, concat_shift=False,
                  dropout=0.8, use_TSM=True,
                  crop_num=1, partial_bn=True):
         super(TSN, self).__init__()
@@ -20,7 +20,9 @@ class TSN(nn.Module):
         self.dropout = dropout
         self.crop_num = crop_num
         self.consensus_type = consensus_type
-        self.mixer = mixer
+        self.mixer1 = mixer1
+        self.mixer2 = mixer2
+        self.concat_shift = concat_shift
         if not before_softmax and consensus_type != 'avg':
             raise ValueError("Only avg consensus can be used after Softmax")
 
@@ -87,17 +89,24 @@ TSN Configurations:
                 for i in range(1,5):
                     if name == "layer" + str(i):
                         for module in modules:
-                            if self.mixer == "TSM":
+                            
+                            if self.mixer1 == "TSM":
                                 module.mixer_module1 = TSM(self.num_segments)
-                            elif self.mixer == "SA":
+                            elif self.mixer1 == "SA":
                                 module.mixer_module1 = Self_Attention(self.num_segments, module.inplanes)
-                            elif self.mixer == "CBAM":
+                                
+                            if self.concat_shift:
+                                module.concat_module = Concatshift(self.num_segments)
+                                conv_weight = module.conv1.weight
+                                module.conv1 = nn.Conv2d(module.in_planes*2, module.planes, kernel_size=1, stride=1, bias=False)
+                                module.conv1.weight = torch.cat((conv_weight, conv_weight), dim=1)
+                                
+                            if self.mixer2 == "CBAM":
                                 module.mixer_module2 = CBAM(module.outplanes, 16 ) 
-                            elif self.mixer == "TSM_CBAM":
-                                module.mixer_module1 = TSM(self.num_segments)
-                                module.mixer_module2 = CBAM(module.outplanes, 16 )
-                            elif self.mixer == "TCBAM":
+                            elif self.mixer2 == "TCBAM":
                                 module.mixer_module2 = TCBAM(self.num_segments, module.outplanes, 16 )
+                                
+                                
 
             self.base_model.last_layer_name = 'fc'
             self.input_size = 224

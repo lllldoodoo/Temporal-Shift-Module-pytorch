@@ -9,7 +9,9 @@ parser.add_argument('--model', type=str, default='TSN', choices=['TSN', 'TSM', '
 
 # ========================= Model Configs ==========================
 parser.add_argument('--arch', type=str, default="resnet50")
-parser.add_argument('--mixer', type=str, default="TSM")
+parser.add_argument('--mixer1', type=str, default=None)
+parser.add_argument('--mixer2', type=str, default=None)
+parser.add_argument('--concat_shift', type=bool, default=False)
 parser.add_argument('--num_segments', type=int, default=8)
 parser.add_argument('--consensus_type', type=str, default='avg',
                     choices=['avg', 'max', 'topk', 'identity', 'rnn', 'cnn'])
@@ -23,8 +25,8 @@ parser.add_argument('--loss_type', type=str, default="nll",
 # ========================= Learning Configs ==========================
 parser.add_argument('--epochs', default=45, type=int, metavar='N',
                     help='number of total epochs to run')
-parser.add_argument('-b', '--batch-size', default=10, type=int,
-                    metavar='N', help='mini-batch size (default: 100)')
+parser.add_argument('-b', '--batch-size', default=64, type=int,
+                    metavar='N', help='mini-batch size (default: 64)')
 parser.add_argument('--lr', '--learning-rate', default=0.01, type=float,
                     metavar='LR', help='initial learning rate')
 parser.add_argument('--lr_steps', default=[15, 30], type=float, nargs="+",
