@@ -99,7 +99,7 @@ TSN Configurations:
                                 module.concat_module = ConcatShift(self.num_segments)
                                 conv_weight = module.conv1.weight
                                 module.conv1 = nn.Conv2d(module.inplanes*2, module.planes, kernel_size=1, stride=1, bias=False)
-                                module.conv1.weight = torch.cat((conv_weight, conv_weight), dim=1)
+                                module.conv1.weight.data = torch.cat((conv_weight, conv_weight), dim=1)
                                 
                             if self.mixer2 == "CBAM":
                                 module.mixer_module2 = CBAM(module.outplanes, 16 ) 
