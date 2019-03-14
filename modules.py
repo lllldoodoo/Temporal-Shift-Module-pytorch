@@ -74,6 +74,7 @@ class Self_Attention(nn.Module):
     
 class ConcatShift(nn.Module):
     def __init__(self, num_segments):
+        super(ConcatShift, self).__init__()
         self.num_segments = num_segments
         
     def forward(self,x):
