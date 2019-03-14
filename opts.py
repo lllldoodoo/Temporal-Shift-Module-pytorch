@@ -17,8 +17,8 @@ parser.add_argument('--consensus_type', type=str, default='avg',
                     choices=['avg', 'max', 'topk', 'identity', 'rnn', 'cnn'])
 parser.add_argument('--k', type=int, default=3)
 
-parser.add_argument('--dropout', '--do', default=0, type=float,
-                    metavar='DO', help='dropout ratio (default: 0)')
+parser.add_argument('--dropout', '--do', default=0.2, type=float,
+                    metavar='DO', help='dropout ratio (default: 0.2)')
 parser.add_argument('--loss_type', type=str, default="nll",
                     choices=['nll'])
 
