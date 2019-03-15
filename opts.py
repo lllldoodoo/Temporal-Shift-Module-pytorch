@@ -4,7 +4,6 @@ parser.add_argument('dataset', type=str, choices=['ucf101', 'hmdb51', 'kinetics'
 parser.add_argument('modality', type=str, choices=['RGB', 'Flow', 'RGBDiff'])
 parser.add_argument('train_list', type=str)
 parser.add_argument('val_list', type=str)
-parser.add_argument('--model', type=str, default='TSN', choices=['TSN', 'TSM', 'GSM', 'etc'])
 
 
 # ========================= Model Configs ==========================
@@ -17,8 +16,8 @@ parser.add_argument('--consensus_type', type=str, default='avg',
                     choices=['avg', 'max', 'topk', 'identity', 'rnn', 'cnn'])
 parser.add_argument('--k', type=int, default=3)
 
-parser.add_argument('--dropout', '--do', default=0.2, type=float,
-                    metavar='DO', help='dropout ratio (default: 0.2)')
+parser.add_argument('--dropout', '--do', default=0, type=float,
+                    metavar='DO', help='dropout ratio (default: 0)')
 parser.add_argument('--loss_type', type=str, default="nll",
                     choices=['nll'])
 
