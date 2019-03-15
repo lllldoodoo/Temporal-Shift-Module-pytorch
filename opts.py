@@ -22,13 +22,13 @@ parser.add_argument('--loss_type', type=str, default="nll",
                     choices=['nll'])
 
 # ========================= Learning Configs ==========================
-parser.add_argument('--epochs', default=45, type=int, metavar='N',
+parser.add_argument('--epochs', default=25, type=int, metavar='N',
                     help='number of total epochs to run')
 parser.add_argument('-b', '--batch-size', default=64, type=int,
                     metavar='N', help='mini-batch size (default: 64)')
 parser.add_argument('--lr', '--learning-rate', default=0.01, type=float,
                     metavar='LR', help='initial learning rate')
-parser.add_argument('--lr_steps', default=[15, 30], type=float, nargs="+",
+parser.add_argument('--lr_steps', default=[10, 20], type=float, nargs="+",
                     metavar='LRSteps', help='epochs to decay learning rate by 10')
 parser.add_argument('--momentum', default=0.9, type=float, metavar='M',
                     help='momentum')
