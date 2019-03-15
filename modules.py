@@ -73,18 +73,27 @@ class Self_Attention(nn.Module):
 
     
 class ConcatShift(nn.Module):
-    def __init__(self, num_segments):
+    def __init__(self, num_segments, reverse=False):
         super(ConcatShift, self).__init__()
         self.num_segments = num_segments
+        self.reverse = reverse
         
     def forward(self,x):
         size = x.size()
         # (N*T, C, H, W)
         x = x.view((-1, self.num_segments) + size[1:])
         # (N, T, C, H, W)
-        x_shift = torch.zeros_like(x)
-        x_shift[:, 1:, ...] = x[:, :-1, ...]
-        x_concat = torch.cat((x_shift, x), dim=2)
+        if not self.reverse:
+            x_shift = torch.zeros_like(x)
+            x_shift[:, 1:, ...] = x[:, :-1, ...]
+            x_concat = torch.cat((x_shift, x), dim=2)
+        else:
+            x_shift = torch.zeros_like(x)
+            x_shift[:, 1:, ...] = x[:, :-1, ...]
+            x_reverse_shift = torch.zeros_like(x)
+            x_reverse_shift[:, :-1, ...] = x[:, 1:, ...]
+            x_concat = torch.cat((x_shift, x, x_reverse_shift), dim=2)
+            
         return x_concat.view((size[0], -1) + size[2:])
     
     

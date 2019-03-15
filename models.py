@@ -9,8 +9,8 @@ from modules import *
 class TSN(nn.Module):
     def __init__(self, num_class, num_segments, modality,
                  base_model='resnet101', mixer1=None, mixer2=None, new_length=None,
-                 consensus_type='avg', before_softmax=True, concat_shift=False,
-                 dropout=0.8, use_TSM=True,
+                 consensus_type='avg', before_softmax=True, concat_shift=None,
+                 dropout=0.8,
                  crop_num=1, partial_bn=True):
         super(TSN, self).__init__()
         self.modality = modality
@@ -95,11 +95,16 @@ TSN Configurations:
                             elif self.mixer1 == "SA":
                                 module.mixer_module1 = Self_Attention(self.num_segments, module.inplanes)
                                 
-                            if self.concat_shift:
+                            if self.concat_shift == "concat_shift":
                                 module.concat_module = ConcatShift(self.num_segments)
                                 conv_weight = module.conv1.weight
                                 module.conv1 = nn.Conv2d(module.inplanes*2, module.planes, kernel_size=1, stride=1, bias=False)
-                                module.conv1.weight.data = 0.5 * torch.cat((conv_weight, conv_weight), dim=1)
+                                module.conv1.weight.data = torch.cat((conv_weight, conv_weight), dim=1)/2.0
+                            elif self.concat_shift == "reverse":
+                                module.concat_module = ConcatShift(self.num_segments, reverse=True)
+                                conv_weight = module.conv1.weight
+                                module.conv1 = nn.Conv2d(module.inplanes*3, module.planes, kernel_size=1, stride=1, bias=False)
+                                module.conv1.weight.data = torch.cat((conv_weight, conv_weight, conv_weight), dim=1)/3.0
                                 
                             if self.mixer2 == "CBAM":
                                 module.mixer_module2 = CBAM(module.outplanes, 16 ) 
