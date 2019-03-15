@@ -110,6 +110,8 @@ TSN Configurations:
                                 module.mixer_module2 = CBAM(module.outplanes, 16 ) 
                             elif self.mixer2 == "TCBAM":
                                 module.mixer_module2 = TCBAM(self.num_segments, module.outplanes, 16 )
+                            elif self.mixer2 == "TSM_CBAM":
+                                module.mixer_module2 = nn.Sequential(TSM(self.num_segments), CBAM(module.outplanes, 16 ))
                                 
                                 
 
