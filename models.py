@@ -22,6 +22,7 @@ class TSN(nn.Module):
         self.consensus_type = consensus_type
         self.mixer1 = mixer1
         self.mixer2 = mixer2
+        self.non_local = non_local
         self.concat_shift = concat_shift
         if not before_softmax and consensus_type != 'avg':
             raise ValueError("Only avg consensus can be used after Softmax")
