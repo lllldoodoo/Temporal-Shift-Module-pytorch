@@ -420,4 +420,3 @@ class NONLocalBlock3D(_NonLocalBlockND):
                                               bn_layer=bn_layer)
         
         
-class att()
