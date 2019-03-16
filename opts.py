@@ -11,6 +11,7 @@ parser.add_argument('--arch', type=str, default="resnet50")
 parser.add_argument('--mixer1', type=str, default=None)
 parser.add_argument('--mixer2', type=str, default=None)
 parser.add_argument('--concat_shift', type=str, default=None)
+parser.add_argument('--non_local', type=str, default=None)
 parser.add_argument('--num_segments', type=int, default=8)
 parser.add_argument('--consensus_type', type=str, default='avg',
                     choices=['avg', 'max', 'topk', 'identity', 'rnn', 'cnn'])

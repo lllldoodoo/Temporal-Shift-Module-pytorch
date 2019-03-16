@@ -112,6 +112,13 @@ TSN Configurations:
                                 module.mixer_module2 = TCBAM(self.num_segments, module.outplanes, 16 )
                             elif self.mixer2 == "TSM_CBAM":
                                 module.mixer_module2 = nn.Sequential(TSM(self.num_segments), CBAM(module.outplanes, 16 ))
+                            elif self.mixer2 == "ConcatShiftGate":
+                                module.mixer_module2 = ConcatShiftGate(self.num_segments, module.outplanes)
+                        
+                        if self.non_local == "non_local":
+                            non_local = NONLocalBlock2D(self.num_segments, modules[0].inplanes)
+                            modules = nn.Sequential(non_local, modules)
+                            
                                 
                                 
 
