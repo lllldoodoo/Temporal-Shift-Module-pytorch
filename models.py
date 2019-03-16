@@ -89,12 +89,18 @@ TSN Configurations:
             for name, modules in self.base_model.named_modules():
                 for i in range(1,5):
                     if name == "layer" + str(i):
-                        for module in modules:
+                        for j, module in enumerate(modules):
                             
                             if self.mixer1 == "TSM":
                                 module.mixer_module1 = TSM(self.num_segments)
                             elif self.mixer1 == "SA":
                                 module.mixer_module1 = Self_Attention(self.num_segments, module.inplanes)
+                                
+                            if j==0 and self.non_local == "non_local":
+                                if module.mixer_module1 == None:
+                                    module.mixer_module1 = NONLocalBlock2D(self.num_segments, module.inplanes)
+                                else:
+                                    module.mixer_module1 = nn.Sequential(NONLocalBlock2D(self.num_segments, module.inplanes), module.mixer_module1)
                                 
                             if self.concat_shift == "concat_shift":
                                 module.concat_module = ConcatShift(self.num_segments)

@@ -368,29 +368,35 @@ class _NonLocalBlockND(nn.Module):
             self.phi = nn.Sequential(self.phi, max_pool_layer)
 
     def forward(self, x):
-        orginal_size = x.size()
-        x = x.view((-1, self.num_segments) + original_size[1:])
-        '''
-        :param x: (b, c, t, h, w)
-        :return:
-        '''
+        # input (N* T, C, H, W)
+        original_size = x.size()
 
-        batch_size = x.size(0)
+        batch_size = x.size(0) // self.num_segments
 
         g_x = self.g(x).view(batch_size, self.inter_channels, -1)
+        # g_x (N, C//2, T * H * W)
         g_x = g_x.permute(0, 2, 1)
-
+        # (N, T * H * W, C//2)
+        
         theta_x = self.theta(x).view(batch_size, self.inter_channels, -1)
         theta_x = theta_x.permute(0, 2, 1)
+        # (N, T * H* W, C//2)
         phi_x = self.phi(x).view(batch_size, self.inter_channels, -1)
+        # (N, C//2, T * H * W)
         f = torch.matmul(theta_x, phi_x)
+        # (N, T*H*W, T*H*W)
         N = f.size(-1)
+        
         f_div_C = f / N
 
         y = torch.matmul(f_div_C, g_x)
+        # (N, T*H*W, C//2)
         y = y.permute(0, 2, 1).contiguous()
-        y = y.view(batch_size, self.inter_channels, *x.size()[2:])
+        # (N, C//2, T*H*W)
+        y = y.view(original_size[0] , -1, original_size[2], original_size[3])
+        # (N * T, C//2, H, W)
         W_y = self.W(y)
+        # (N * T, C, H, W)
         z = W_y + x
 
         return z.view(original_size)

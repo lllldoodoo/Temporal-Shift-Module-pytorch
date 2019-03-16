@@ -36,7 +36,7 @@ def main():
     model = TSN(num_class, args.num_segments, args.modality,base_model=args.arch, \
                 mixer1=args.mixer1, mixer2=args.mixer2, concat_shift=args.concat_shift, non_local=args.non_local,
                 consensus_type=args.consensus_type, dropout=args.dropout, partial_bn=not args.no_partialbn)
-
+    print(model)
     crop_size = model.crop_size
     scale_size = model.scale_size
     input_mean = model.input_mean
