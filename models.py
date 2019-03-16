@@ -8,7 +8,7 @@ from modules import *
 
 class TSN(nn.Module):
     def __init__(self, num_class, num_segments, modality,
-                 base_model='resnet101', mixer1=None, mixer2=None, new_length=None,
+                 base_model='resnet101', mixer1=None, mixer2=None, non_local=None, new_length=None,
                  consensus_type='avg', before_softmax=True, concat_shift=None,
                  dropout=0.8,
                  crop_num=1, partial_bn=True):
