@@ -33,15 +33,10 @@ def main():
     else:
         raise ValueError('Unknown dataset '+args.dataset)
 
-    if args.model == 'TSN':
-        model = TSN(num_class, args.num_segments, args.modality,
+    model = TSN(num_class, args.num_segments, args.modality,
                 base_model=args.arch, mixer=args.mixer,
                 consensus_type=args.consensus_type, dropout=args.dropout, partial_bn=not args.no_partialbn)
-    else:
-        model = TSN(num_class, args.num_segments, args.modality,
-                base_model=args.arch, mixer=args.mixer,
-                consensus_type=args.consensus_type, dropout=args.dropout, partial_bn=not args.no_partialbn)
-
+    
 
     crop_size = model.crop_size
     scale_size = model.scale_size
@@ -49,6 +44,7 @@ def main():
     input_std = model.input_std
     policies = model.get_optim_policies()
     train_augmentation = model.get_augmentation()
+    
 
     if args.resume:
         if os.path.isfile(args.resume):
@@ -61,7 +57,7 @@ def main():
                   .format(args.evaluate, checkpoint['epoch'])))
         else:
             print(("=> no checkpoint found at '{}'".format(args.resume)))
-    
+            
     model = torch.nn.DataParallel(model, device_ids=args.gpus).cuda()
     cudnn.benchmark = True
 
@@ -140,20 +136,12 @@ def main():
             # remember best prec@1 and save checkpoint
             is_best = prec1 > best_prec1
             best_prec1 = max(prec1, best_prec1)
-            if len(args.gpus) > 1:
-                save_checkpoint({
+            save_checkpoint({
                     'epoch': epoch + 1,
                     'arch': args.arch,
                     'state_dict': model.module.state_dict(),
                     'best_prec1': best_prec1,
-                }, is_best)
-            else:
-                save_checkpoint({
-                    'epoch': epoch + 1,
-                    'arch': args.arch,
-                    'state_dict': model.state_dict(),
-                    'best_prec1': best_prec1,
-                }, is_best)
+            }, is_best)
 
 
 def train(train_loader, model, criterion, optimizer, epoch):

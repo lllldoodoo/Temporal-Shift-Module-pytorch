@@ -64,45 +64,6 @@ class TSM(nn.Module):
 
         return tsm(x, self.num_segments, self.version)
 
-import pudb
-
-class Self_Attention(nn.Module):
-
-    def __init__(self, num_segments, dim_in, dim_k=64):
-        super(Self_Attention, self).__init__()
-        self.num_segments = num_segments
-        self.dim_in = dim_in
-        self.dim_k = dim_k
-        self.softmax = nn.Softmax(dim=-1)
-        self.dropout = nn.Dropout(0.2)
-        self.linear = nn.Linear(dim_in, dim_k)
-
-    def forward(self, x):
-        # x: [N * T, C, H, W]
-        pudb.set_trace()
-        size = x.size()
-        x = x.reshape((-1, size[1], size[2]*size[3]))
-        # x: [N * T, C, H * W]
-        Q = x.max(dim=-1)[0]
-        # Q: [N * T, C]
-        Q = self.linear(Q)
-        # Q: [N * T, k]
-        Q = Q.reshape((-1, self.num_segments, self.dim_k))
-        # Q: [N, T, k]
-        A = torch.matmul(Q, Q.transpose(1, 2))
-        # A: [N, T, T]
-        A = A/ math.sqrt(self.dim_k)
-        A = self.softmax(A)
-        A = self.dropout(A)
-
-        x = x.view((-1, self.num_segments, size[1]*size[2]*size[3]))
-        # x: [N, T, C * H * W]
-        output = torch.matmul(A, x)
-        # out: [N, T, C * H * W]
-        output = output.view(size)
-
-        return output
-
 
 
 

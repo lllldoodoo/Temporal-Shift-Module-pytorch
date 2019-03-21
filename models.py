@@ -88,8 +88,6 @@ TSN Configurations:
                         for module in modules:
                             if self.mixer == "TSM":
                                 module.mixer_module = resnet.TSM(self.num_segments)
-                            elif self.mixer == "SA":
-                                module.mixer_module = resnet.Self_Attention(self.num_segments, module.inplanes)
 
             self.base_model.last_layer_name = 'fc'
             self.input_size = 224
